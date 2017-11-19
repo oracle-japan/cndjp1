@@ -20,47 +20,95 @@ CNDJP #1 ハンズオンチュートリアル
 --------
 このチュートリアルは、以下の環境で実施することを前提とします。
 
-- OS: Windows/Mac/Linux
+- OS: Windows/MacOS X/Linux
 - インストールSW
-    * Vagrant
-    * VirtualBox[^1]
+    * MacOS X:
+        - Homebrew
+        - Vagrant 1.8.6+
+        - VirtualBox
+    * Windows
+        - Vagrant 1.8.6+
+        - VirtualBox
+    * Linux
+        - Vagrant 1.8.6+
+        - VirtualBox[^1]
 
 以降の手順は、ほとんどの操作をコマンドラインツールから実行します。Mac/Linuxの場合はターミナル、Windowsの場合はWindows PowerShell利用するものとして、手順を記述します。
 
-[^1]: Linux(ubuntu 16.04)で、5.1.x以上のバージョンでは動作しない問題を確認しています（2017/11/12時点）。ご注意ください。
+[^1]: Linux(ubuntu 16.04)で、VirtualBox 5.1.x以上のバージョンでは動作しない問題を確認しています。当該OSを利用する場合は5.0.xの利用を推奨します。
 
 
  1 . Kubernetesクラスターのセットアップ
 -------------------------------------
+
+### インストールスクリプトの取得
 コマンドラインツールを起動し、適当なディレクトリをカレントディレクトリにします。このディレクトリに、Kubernetesクラスターのインストールスクリプト一式をダウンロードします。
 
     > mkdir cndjp
     > cd cndjp
 
-インストールスクリプトには、Core OSの仮想マシン上で実行されるものが含まれます。これらは`git clone`時に改行コードが変換されてしまうと、Core OS上で正しく動作しない場合があります。これを避けるため、改行コードの自動変換を無効化するようにGitを設定しておきます。
+インストールスクリプトには、Core OSの仮想マシン上で実行されるものが含まれます。これらは`git clone`時に改行コードが変換されてしまうと、Core OS上で正しく動作しない場合があります。これを避けるため、改行コードの自動変換を無効化するようにGitを設定しておきます。<br>
+以下は、CLIのgitクライアントを利用してこの設定を行う例です。
 
     > git config --global core.autocrlf false
 
-[Kubernetesクラスターのインストールスクリプト](https://github.com/pires/kubernetes-vagrant-coreos-cluster)を取得します。
+[Kubernetesクラスターのインストールスクリプト](https://github.com/pires/kubernetes-vagrant-coreos-cluster)を、任意のGitクライアントを使ってクローンします。この時、タグ”1.7.10”を指定します。<br>
+以下は、CLIのgitクライアントを利用する例です。
 
-    > git clone https://github.com/pires/kubernetes-vagrant-coreos-cluster.git
+    > git clone -b 1.7.10 https://github.com/pires/kubernetes-vagrant-coreos-cluster.git
 
-cloneで作成されたフォルダのトップを、カレントディレクトリにします。
+クローンして作成されたフォルダのトップを、カレントディレクトリにしておきます。
 
     > cd kubernetes-vagrant-coreos-cluster
 
-今回作成するクラスターは、Kubernetesノードの共有ディスクとしてNFSを利用します。NFSがインストールされていなければ、新たにインストールする必要があります。<br>
+### wgetのインストール（Macのみ）
+wgetがインストールされていなければ、ここでインストールしておきます。
+
+    > brew install wget
+
+wgetはインストールスクリプトの実行時に、kubectlの取得のために利用されます。
+
+### NFSのインストール（Linuxで該当する環境のみ）
+今回作成するクラスターは、Kubernetesノードの共有ディスクとしてNFSを利用します。NFSがインストールされていなければ、新たにインストールする必要があります。この作業は、Windows/Macの場合は不要です。<br>
 以下のコマンドは、debian/ubuntu系のLinuxでNFSをインストールする例です。
 
     > apt-get install nfs-kernel-server
 
-Windows、Macの場合は、この手順は必要ありません。WindowsではNFSと同等の機能を提供するVagrantプラグインが、自動的に利用されます。Macの場合は既にNFSがインストールされています。
+WindowsではNFSと同等の機能を提供するVagrantプラグインが、自動的に利用されます。Macの場合は標準でNFSがインストールされています。
 
-また、NFSへの通信はFirewallによって遮断されてしまうことが多いので、ここで無効化しておきます。
+### Firewall無効化の確認
+NFSへの通信がFirewallによって遮断されてしまうことが多いので、ここで無効化しておきます。
 
-最後にインストールスクリプトを実行します。
+### インストールスクリプトの実行
+インストールスクリプトを実行する前に、作成するクラスターの構成を決めます。デフォルトでは、以下のような構成のクラスターが構築されます。
+
+- マスターノード:
+    * CPU: 2 vCPUs
+    * メモリ: 1024 MB
+- メンバーノード:
+    * CPU: 2 vCPUs
+    * メモリ: 2048 MB
+- メンバーノード数: 2
+
+デフォルトの構成でインストールスクリプトを実行するには、以下のコマンドを実行します。
 
     > vagrant up
+
+ご利用のPCが上記のスペックを賄うには非力な場合には、適宜パラメータを調整します。例えば、Macbook Air - Late 2011 4G Memでは、以下の構成でクラスターが稼働することを確認します。
+
+- マスターノード:
+    * CPU: 1 vCPUs
+    * メモリ: 1024 MB
+- メンバーノード:
+    * CPU: 1 vCPUs
+    * メモリ: 1024 MB
+- メンバーノード数: 1
+
+この構成でインストールスクリプトを実行するには、以下のコマンドを実行します。
+
+    > NODES=1 MASTER_MEM=1024 MASTER_CPUS=1 NODE_MEM=1024 NODE_CPUS=1 vagrant up
+
+パラメータの詳細は、[インストールスクリプトのREADME.md](https://github.com/pires/kubernetes-vagrant-coreos-cluster/blob/master/README.md)を参照してください。
 
 コンソールに以下のような内容が出力されれば、クラスターの構築が成功しています。
 
@@ -137,6 +185,8 @@ PowerShellを再起動の後、以下のコマンドを実行して、PATHの設
 
 2 . 最初のアプリケーションを動かしてみる
 ---------------------------------------
+
+### サンプルアプリケーションのデプロイ
 Kubernetesクラスターに、サンプルアプリケーションをデプロイしてみます。以下のコマンドを実行します。[^2]
 
     > kubectl run kubernetes-bootcamp --image=docker.io/jocatalin/kubernetes-bootcamp:v1 --port=8080
@@ -153,6 +203,7 @@ Kubernetesクラスターに、サンプルアプリケーションをデプロ�
 
     > kubectl describe deployments/kubernetes-bootcamp
 
+### プロキシの構成
 アプリケーション稼働しているコンテナを公開します。ここでは、KubernetesのAPIサーバーに対するプロキシを構成し、APIサーバー経由でアプリケーションにアクセスします。
 以下のコマンドで、プロキシを構成します。
 
@@ -184,6 +235,7 @@ Kubernetesのバージョン情報が、以下のようなJSON形式で取得で
 }
 ```
 
+### アプリケーションへのアクセス
 いよいよアプリケーションにアクセスしてみます。以下のコマンドを順に実行してください。
 
 ・Mac/Linux
