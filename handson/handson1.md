@@ -66,6 +66,7 @@ KubernetesクラスターのインストールスクリプトをUSBメモリで�
 以下は、CLIのgitクライアントを利用してこの設定を行う例です。
 
     > git config --global core.autocrlf false
+    > git config --global core.eol lf
 
 [Kubernetesクラスターのインストールスクリプト](https://github.com/pires/kubernetes-vagrant-coreos-cluster)を、任意のGitクライアントを使ってクローンします。この時、タグ”1.7.10”を指定します。<br>
 以下は、CLIのgitクライアントを利用する例です。
