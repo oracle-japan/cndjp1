@@ -118,7 +118,7 @@ NFSへの通信がFirewallによって遮断されてしまうことが多いの
 - メンバーノード:
     * CPU: 1 vCPUs
     * メモリ: 1024 MB
-- メンバーノード数: 1
+- メンバーノード数: 2
 
 この構成でインストールスクリプトを実行するには、以下のコマンドを実行します。
 
@@ -149,6 +149,21 @@ NFSへの通信がFirewallによって遮断されてしまうことが多いの
     master                    running (virtualbox)
     node-01                   running (virtualbox)
     node-02                   running (virtualbox)
+
+### クラスターの停止/再起動
+ハンズオン終了後に、クラスターを停止/再起動する際には、以下の操作を行ってください
+
+- 停止
+
+    > vagrant halt
+
+- 起動
+
+    > vagrant up
+
+クラスターの仮想マシン削除するには、以下のクラスターの停止後に、以下のコマンドを実行してください。
+
+    > vagrant destroy
 
 
  2 . kubectlのセットアップ
