@@ -18,20 +18,23 @@ CNDJP #1 ハンズオンチュートリアル
 
 前提条件
 --------
-このチュートリアルは、以下の環境で実施することを前提とします。
+このチュートリアルは、以下の環境で実施することを前提とします。[^1]
 
 - OS: Windows/MacOS X/Linux
 - インストールSW
     * MacOS X:
-        - Homebrew
         - Vagrant 1.8.6+
         - VirtualBox
+        - Homebrew
+        - 任意のGitクライアント
     * Windows
         - Vagrant 1.8.6+
         - VirtualBox
+        - 任意のGitクライアント
     * Linux
         - Vagrant 1.8.6+
-        - VirtualBox[^1]
+        - VirtualBox
+        - 任意のGitクライアント
 
 以降の手順は、ほとんどの操作をコマンドラインツールから実行します。Mac/Linuxの場合はターミナル、Windowsの場合はWindows PowerShell利用するものとして、手順を記述します。
 
@@ -57,20 +60,45 @@ KubernetesクラスターのインストールスクリプトをUSBメモリで�
 
  1 . Kubernetesクラスターのセットアップ
 -------------------------------------
+ここではKubernetesクラスターのインストールスクリプトを利用して、クラスターをセットアップします。
 
-### インストールスクリプトの取得
-コマンドラインツールを起動し、適当なディレクトリをカレントディレクトリにします。このディレクトリに、Kubernetesクラスターのインストールスクリプト一式をダウンロードします。
+### 1-1. 準備作業
+以下、お使いのマシンの環境に応じて、該当する準備作業を実施してください。
 
-    > mkdir cndjp
-    > cd cndjp
+#### Windowsの場合: gitクライアントの設定変更
+このチュートリアルで利用するKubernetesのインストールスクリプトには、Core OSの仮想マシン上で実行されるものが含まれます。<br>
+`git clone`時にこれらのスクリプトの改行コードが変換されてしまうと、Core OS上で正しく動作しない場合があります。これを避けるため、改行コードの自動変換を無効化するようにGitを設定しておきます。
 
-インストールスクリプトには、Core OSの仮想マシン上で実行されるものが含まれます。これらは`git clone`時に改行コードが変換されてしまうと、Core OS上で正しく動作しない場合があります。これを避けるため、改行コードの自動変換を無効化するようにGitを設定しておきます。<br>
 以下は、CLIのgitクライアントを利用してこの設定を行う例です。
 
     > git config --global core.autocrlf false
     > git config --global core.eol lf
 
-[Kubernetesクラスターのインストールスクリプト](https://github.com/pires/kubernetes-vagrant-coreos-cluster)を、任意のGitクライアントを使ってクローンします。この時、タグ”1.7.10”を指定します。<br>
+
+#### MaxOS Xの場合: wgetのインストール
+wgetがインストールされていなければ、ここでインストールしておきます。
+
+    > brew install wget
+
+wgetはインストールスクリプトの実行時に、kubectlの取得のために利用されます。
+
+#### LinuxでNFSが無い場合: NFSのインストール
+今回作成するクラスターは、Kubernetesノードの共有ディスクとしてNFSを利用します。NFSがインストールされていなければ、新たにインストールする必要があります。この作業は、Windows/Macの場合は不要です。<br>
+以下のコマンドは、debian/ubuntu系のLinuxでNFSをインストールする例です。
+
+    > apt-get install nfs-kernel-server
+
+WindowsではNFSと同等の機能を提供するVagrantプラグインが、自動的に利用されます。Macの場合は標準でNFSがインストールされています。
+
+### 1-2. インストールスクリプトの取得
+コマンドラインツールを起動し、適当なディレクトリをカレントディレクトリにします。
+
+    > mkdir cndjp
+    > cd cndjp
+
+このディレクトリに、Kubernetesクラスターのインストールスクリプト一式をダウンロードします。
+
+[Kubernetesクラスターのインストールスクリプト](https://github.com/pires/kubernetes-vagrant-coreos-cluster)を、クローンします。この時、タグ”1.7.10”を指定します。<br>
 以下は、CLIのgitクライアントを利用する例です。
 
     > git clone -b 1.7.10 https://github.com/pires/kubernetes-vagrant-coreos-cluster.git
@@ -79,27 +107,12 @@ KubernetesクラスターのインストールスクリプトをUSBメモリで�
 
     > cd kubernetes-vagrant-coreos-cluster
 
-### wgetのインストール（Macのみ）
-wgetがインストールされていなければ、ここでインストールしておきます。
-
-    > brew install wget
-
-wgetはインストールスクリプトの実行時に、kubectlの取得のために利用されます。
-
-### NFSのインストール（Linuxで該当する環境のみ）
-今回作成するクラスターは、Kubernetesノードの共有ディスクとしてNFSを利用します。NFSがインストールされていなければ、新たにインストールする必要があります。この作業は、Windows/Macの場合は不要です。<br>
-以下のコマンドは、debian/ubuntu系のLinuxでNFSをインストールする例です。
-
-    > apt-get install nfs-kernel-server
-
-WindowsではNFSと同等の機能を提供するVagrantプラグインが、自動的に利用されます。Macの場合は標準でNFSがインストールされています。
-
-### Firewall無効化の確認
+### 1-3. Firewall無効化の確認
 NFSへの通信がFirewallによって遮断されてしまうことが多いので、ここで無効化しておきます。
 
 特にWindowsの場合、デフォルトのFirewallの設定でも遮断されてしまうので、注意してください。Windows 10でWindows Defenderを利用している場合の無効化方法を、[こちら](./disableFw.md)に記載していますので、参考としてください。
 
-### インストールスクリプトの実行
+### 1-4. インストールスクリプトの実行
 インストールスクリプトを実行する前に、作成するクラスターの構成を決めます。デフォルトでは、以下のような構成のクラスターが構築されます。
 
 - マスターノード:
@@ -154,7 +167,7 @@ NFSへの通信がFirewallによって遮断されてしまうことが多いの
     node-01                   running (virtualbox)
     node-02                   running (virtualbox)
 
-### クラスターの停止/再起動
+### 1-5. クラスターの停止/再起動
 ハンズオン終了後に、クラスターを停止/再起動する際には、以下の操作を行ってください
 
 ・停止
@@ -174,7 +187,7 @@ NFSへの通信がFirewallによって遮断されてしまうことが多いの
 ------------------------
 ここでは、Kubernetesの管理操作を行うためのCLIである、kubectlをセットアップします。
 
-### kubectlのインストール(Windowsユーザー向け)
+### 2-1. Windowsのみ: kubectlのインストール
 （Mac/Linuxの場合は自動でkubectlがインストールされるため、この手順は不要です。「Kubernetesクラスターへの疎通確認」に進んでください。）
 
 kubectlのバイナリファイルを、以下からダウンロードします。
@@ -198,7 +211,7 @@ PowerShellを再起動の後、以下のコマンドを実行して、PATHの設
     > kubectl config set-context default-cluster --cluster=default-cluster --user=default-admin
     > kubectl config use-context default-cluster
 
-### Kubernetesクラスターへの疎通確認
+### 2-2. Kubernetesクラスターへの疎通確認
 以下のコマンドを実行して、Kubernetesクラスターへの疎通を確認します。
 
 ・クラスター情報の取得
@@ -221,7 +234,7 @@ PowerShellを再起動の後、以下のコマンドを実行して、PATHの設
  3 . 最初のアプリケーションを動かしてみる
 ---------------------------------------
 
-### サンプルアプリケーションのデプロイ
+### 3-1. サンプルアプリケーションのデプロイ
 Kubernetesクラスターに、サンプルアプリケーションをデプロイしてみます。以下のコマンドを実行します。[^2]
 
     > kubectl run kubernetes-bootcamp --image=docker.io/jocatalin/kubernetes-bootcamp:v1 --port=8080
@@ -238,7 +251,7 @@ Kubernetesクラスターに、サンプルアプリケーションをデプロ�
 
     > kubectl describe deployments/kubernetes-bootcamp
 
-### プロキシの構成
+### 3-2. プロキシの構成
 アプリケーション稼働しているコンテナを公開します。ここでは、KubernetesのAPIサーバーに対するプロキシを構成し、APIサーバー経由でアプリケーションにアクセスします。
 以下のコマンドで、プロキシを構成します。
 
@@ -270,7 +283,7 @@ Kubernetesのバージョン情報が、以下のようなJSON形式で取得で
 }
 ```
 
-### アプリケーションへのアクセス
+### 3-3. アプリケーションへのアクセス
 いよいよアプリケーションにアクセスしてみます。以下のコマンドを順に実行してください。
 
 ・Mac/Linux
