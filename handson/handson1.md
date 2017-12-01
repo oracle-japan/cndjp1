@@ -139,7 +139,7 @@ NFSへの通信がFirewallによって遮断されてしまうことが多いの
 
 この構成でインストールスクリプトを実行するには、以下のコマンドを実行します。
 
-    > NODES=1 MASTER_MEM=1024 MASTER_CPUS=1 NODE_MEM=1024 NODE_CPUS=1 vagrant up
+    > NODES=2 MASTER_MEM=1024 MASTER_CPUS=1 NODE_MEM=1024 NODE_CPUS=1 vagrant up
 
 パラメータの詳細は、[インストールスクリプトのREADME.md](https://github.com/pires/kubernetes-vagrant-coreos-cluster/blob/master/README.md)を参照してください。
 
